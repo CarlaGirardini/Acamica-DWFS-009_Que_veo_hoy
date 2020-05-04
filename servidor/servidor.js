@@ -19,6 +19,7 @@ app.use(bodyParser.json());
 var puerto = '8080';
 
 app.get('/peliculas', controller.buscarTodasLasPeliculas);
+app.get('/generos', controller.buscarGeneros);
 
 app.listen(puerto, function () {
   console.log( "Escuchando en el puerto " + puerto );

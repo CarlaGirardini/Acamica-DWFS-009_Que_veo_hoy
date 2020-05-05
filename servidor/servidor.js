@@ -19,6 +19,8 @@ app.use(bodyParser.json());
 var puerto = '8080';
 
 app.get('/peliculas', controller.buscarTodasLasPeliculas);
+app.get('/peliculas/recomendacion', controller.recomendarPeliculas);
+app.get('/peliculas/:id', controller.buscarPeliculaId);
 app.get('/generos', controller.buscarGeneros);
 
 app.listen(puerto, function () {

@@ -1,6 +1,6 @@
 (function() {
     var server = 'http://localhost:8080';
-    var params = location.search
+    var params = location.search;
     //se obtiene el id de la película de la cuál tenemos que obtener la información
     var id = (params.split("="))[1];
 
@@ -14,7 +14,7 @@
                 
                 pelicula = data.pelicula;
                 actores = data.actores;
-                genero = data.pelicula.nombre;
+                genero = data.genero;
 
                 $(".imagen").attr("src", pelicula.poster);
                 $(".titulo, title").html(pelicula.titulo + " (" + pelicula.anio + ")");
@@ -27,7 +27,7 @@
                 $(".rank").html(pelicula.puntuacion + "/10");
                 var actores_string = '';
                 for (i = 0; i < actores.length; i++) {
-                    actores_string += actores[i].nombre + ", "
+                    actores_string += actores[i] + ", "
                 }
                 $(".actores").html(actores_string.slice(0, -2));
             },

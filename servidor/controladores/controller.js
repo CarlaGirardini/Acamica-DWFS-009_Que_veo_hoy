@@ -1,7 +1,7 @@
 var con = require('../lib/conexionbd');
 
 function buscarTodasLasPeliculas(req, res){
-    var sql = 'select * from pelicula left join genero on pelicula.genero_id = genero.id';
+    var sql = 'select pelicula.id, pelicula.titulo, pelicula.duracion, pelicula.director, pelicula.anio, pelicula.fecha_lanzamiento, pelicula.puntuacion, pelicula.poster, pelicula.trama from pelicula left join genero on pelicula.genero_id = genero.id';
     var filtros;
 
     // Si hay filtros, agrego 'where':
@@ -63,6 +63,89 @@ function buscarTodasLasPeliculas(req, res){
     });
 };
 
+function buscarPeliculaId(req, res){
+    var id = req.params.id;
+    // Agrego el if que sigue para solucionar un problema de rutas.
+    sql = `select pelicula.titulo, pelicula.duracion, pelicula.director, pelicula.anio, pelicula.fecha_lanzamiento, pelicula.puntuacion, pelicula.poster, pelicula.trama, genero.nombre as genero, actor.nombre from pelicula join genero on pelicula.genero_id = genero.id join actor_pelicula on actor_pelicula.pelicula_id = pelicula.id join actor on actor_pelicula.actor_id = actor.id where pelicula.id = ${id}`;
+
+    con.query(sql, function(err, resp, fields){
+        if(err){
+            console.log('Hubo un error en la consulta', err.message);
+            return res.status(404).send('Hubo un error en la consulta');
+        }
+        var pelicula = {
+            'titulo': resp[0].titulo,
+            'duracion': resp[0].duracion,
+            'director': resp[0].director,
+            'anio': resp[0].anio,
+            'fecha_lanzamiento': resp[0].fecha_lanzamiento,
+            'puntuacion': resp[0].puntuacion,
+            'poster': resp[0].poster,
+            'trama': resp[0].trama
+        };
+        var genero = resp[0].genero;
+        var actores = [];
+        resp.forEach(pel => {
+            actores.push(pel.nombre);
+        });
+        var data = {
+            'pelicula': pelicula,
+            'genero': genero,
+            'actores': actores
+        }
+        res.send(JSON.stringify(data));
+    });
+};
+
+function recomendarPeliculas(req, res){
+    var sql = 'select pelicula.id, pelicula.titulo, pelicula.duracion, pelicula.director, pelicula.anio, pelicula.fecha_lanzamiento, pelicula.puntuacion, pelicula.poster, pelicula.trama, genero.nombre from pelicula left join genero on pelicula.genero_id = genero.id';
+
+    // Los posibles query params son:
+        // genero
+        // anio_inicio
+        // anio_fin
+        // puntuacion
+        
+        var filtros = ' where';
+        
+        if (req.query.genero){
+            var nombre = req.query.genero;
+            filtros += ` genero.nombre = "${nombre}"`
+            // Si hay más filtros, agrego el AND
+            if(req.query.anio_inicio || req.query.puntuacion){
+                filtros += ' and'
+            }
+        };
+        if (req.query.anio_inicio && req.query.anio_fin){
+            var inicio = req.query.anio_inicio;
+            var fin = req.query.anio_fin;
+            filtros += ` pelicula.anio between ${inicio} and ${fin}`
+            // Si hay más filtros, agrego el AND
+            if(req.query.puntuacion){
+                filtros += ' and'
+            }
+        };
+        if (req.query.puntuacion){
+            var puntMin = req.query.puntuacion;
+            filtros += ` pelicula.puntuacion between ${puntMin} and 10`;
+        };
+
+        if(req.query.genero || req.query.anio_inicio || req.query.puntuacion){
+            sql += filtros;
+        }
+        
+    con.query(sql, function(err, resp, fields){
+        if(err){
+            console.log('Hubo un error en la consulta', err.message);
+            return res.status(404).send('Hubo un error en la consulta');
+        }
+        var respuesta = {
+            'peliculas': resp
+        }
+        res.send(JSON.stringify(respuesta));
+    });
+};
+
 function buscarGeneros(req, res){
     var sql = 'select * from genero';
 
@@ -80,5 +163,7 @@ function buscarGeneros(req, res){
 
 module.exports = {
     buscarTodasLasPeliculas,
+    buscarPeliculaId,
+    recomendarPeliculas,
     buscarGeneros
 };
